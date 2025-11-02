@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PHONOSTAGE — Coréa Calculator</title>
+  <style>
+    :root{
+      --bg:#0f1115; --panel:#171a21; --muted:#8a93a5; --text:#e9edf5; --accent:#7aa2ff; --accent-2:#67e8f9;
+      --border:#2a2f3a; --chip:#232837; --warn:#b45309; --bad:#b91c1c; --good:#059669;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,"Noto Sans",sans-serif;background:linear-gradient(180deg,#0e1014,#0c0f14 40%,#0b0e13 100%);color:var(--text)}
+    a{color:var(--accent)}
+    .wrap{max-width:1200px;margin:0 auto;padding:24px}
+    header.title{background:#12151c;border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+    .title h1{margin:0;font-size:24px;letter-spacing:.35px}
+    .subtitle{margin:6px 0 0;color:var(--muted);font-style:italic;font-size:13px}
+
+    .grid{display:grid;gap:16px}
+    @media (min-width:1100px){.grid{grid-template-columns:1.2fr .8fr}}
+
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px 14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+    .card h2{margin:4px 6px 0;font-size:18px}
+    .card .meta{color:var(--muted);font-size:12px;margin:6px 6px 8px}
+
+    .fieldset{border:1px dashed var(--border);border-radius:12px;padding:10px;margin:10px 6px}
+    .row{display:grid;grid-template-columns:260px 1fr;gap:10px;align-items:center;margin:6px 0}
+    label{color:#cdd5e1;font-size:14px}
+    input,select,button{font:inherit}
+    input,select{width:100%;background:#0f131b;border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text)}
+    input[disabled]{opacity:.7}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin:6px}
+    .btn{background:#111827;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer}
+    .btn:hover{border-color:#3a4152}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#0b1020;border:0}
+    .btn.ghost{background:transparent;border-color:#3a4152}
+
+    .results{border-top:1px solid var(--border);margin-top:10px;padding-top:10px}
+    .result-line{display:flex;gap:10px;align-items:center;margin:4px 0}
+    .result-line strong{font-size:16px}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--chip);border:1px solid var(--border);font-size:12px;color:#c7d2fe;margin-left:8px}
+
+    details{background:#12161f;border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:10px 6px}
+    details>summary{cursor:pointer;list-style:none}
+    details>summary::-webkit-details-marker{display:none}
+
+    .about{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px;margin-top:16px}
+
+    dialog{border:1px solid var(--border);border-radius:16px;background:#0e1219;color:var(--text);box-shadow:0 40px 120px rgba(0,0,0,.5)}
+    dialog::backdrop{background:rgba(0,0,0,.55)}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+
+    .muted{color:var(--muted)}
+    .warn{color:var(--warn)}
+    .bad{color:var(--bad);font-weight:700}
+    .good{color:var(--good)}
+
+    /* Table billets */
+    .table{border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    table{width:100%;border-collapse:collapse;min-width:680px}
+    thead th{background:#12161f;color:#e5e7eb;text-align:left;padding:10px 12px;border-bottom:1px solid var(--border)}
+    tbody td{padding:8px 10px;border-bottom:1px solid var(--border)}
+    tbody tr.selected{outline:2px solid var(--accent)}
+    tbody tr:nth-child(odd){background:#0f172a}
+    tbody tr:nth-child(even){background:#111827}
+    tbody input{width:100%;background:#0b1018;border:1px solid #202635;border-radius:8px;padding:8px 10px;color:var(--text);text-align:center}
+    tfoot td{padding:10px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="title">
+      <h1>PHONOSTAGE — Coréa Calculator</h1>
+      <p class="subtitle">MAJ : 31 octobre 2025</p>
+    </header>
+
+    <div class="grid">
+      <!-- Colonne principale -->
+      <section class="card" id="ctxCard">
+        <h2>Contexte & objectifs <span class="badge" id="ctxBadge"></span></h2>
+        <div class="fieldset">
+          <div class="row">
+            <label><input type="checkbox" id="simuToggle"/> Simulation prix billet (tableau)</label>
+            <div class="muted">Active un tableau de tarifs pour calculer l'objectif et le prix moyen automatiquement.</div>
+          </div>
+        </div>
+        <div class="fieldset">
+          <div class="row"><label for="dep">Dépense prévisionnelle (€)</label><input id="dep" /></div>
+          <div class="row"><label for="mg">Minimum Garanti (€)</label><input id="mg" /></div>
+          <div class="row"><label for="cap">Capacité prévisionnelle (places)</label><input id="cap" /></div>
+          <div class="row"><label for="obj">Objectif de recette (€)</label><input id="obj" /></div>
+          <div class="row"><label for="pu">Prix moyen HT prévisionnel (€)</label><input id="pu" /></div>
+        </div>
+        <div class="results">
+          <div class="result-line"><strong id="breakTxt">Break : —</strong> <button class="btn" data-copy="breakNum">Copier</button></div>
+          <div class="result-line"><strong id="resTxt">Résultat : —</strong> <button class="btn" data-copy="resNum">Copier</button></div>
+          <div class="result-line"><strong id="nbBreakTxt">Nb billets pour break : —</strong> <button class="btn" data-copy="nbBreakNum">Copier</button></div>
+          <div class="result-line"><strong id="rateBreakTxt">Taux de break : —</strong> <button class="btn" data-copy="rateBreakNum">Copier</button></div>
+        </div>
+      </section>
+
+      <!-- Colonne latérale : Répartition -->
+      <section class="card" id="repCard">
+        <h2>Break & répartition</h2>
+        <div class="fieldset">
+          <div class="row">
+            <label>% producteur</label>
+            <input type="range" id="pctProd" min="0" max="100" value="50"/>
+          </div>
+          <div class="row">
+            <label>Viser un objectif producteur (€)</label>
+            <input id="objProdTarget" placeholder="Entrer un montant et ↵" />
+          </div>
+        </div>
+        <div class="results">
+          <div class="result-line"><strong id="pctProdTxt">% Prod : —</strong> <button class="btn" data-copy="pctProdNum">Copier</button></div>
+          <div class="result-line"><strong id="partOrgTxt">Part Orga : —</strong> <button class="btn" data-copy="partOrgNum">Copier</button></div>
+          <div class="result-line"><strong id="pctOrgTxt">% Orga : —</strong> <button class="btn" data-copy="pctOrgNum">Copier</button></div>
+          <div class="result-line bad" id="shortfallTxt"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Accordéon Simulation billets -->
+    <section class="card" id="tblCard" style="display:none">
+      <h2>Simulation billets <span class="badge" id="tblBadge"></span></h2>
+      <div class="btns" style="justify-content:flex-start">
+        <button class="btn" id="rowAdd">Ajouter</button>
+        <button class="btn" id="rowDup">Dupliquer</button>
+        <button class="btn" id="rowDel">Supprimer</button>
+      </div>
+      <div class="table" style="overflow:auto">
+        <table id="priceTable">
+          <thead>
+            <tr><th style="width:260px">Tarif</th><th style="width:160px">Prix HT (€)</th><th style="width:160px">Nb billets</th><th style="width:200px">Total HT (€)</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="results" id="tblSummary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div><strong id="pmoyTxt">Prix unitaire (moyenne pondérée) : —</strong> <button class="btn" data-copy="pmoyNum">Copier</button></div>
+        <div><strong id="snbTxt">Σ billets : —  •  Occupation : —</strong></div>
+        <div><strong id="stotTxt">Σ Total HT : —</strong> <button class="btn" data-copy="stotNum">Copier</button></div>
+      </div>
+      <div class="warn" id="capWarn" style="margin-top:6px"></div>
+    </section>
+
+    <!-- Synthèse -->
+    <section class="card" id="synCard">
+      <h2>Synthèse <span class="badge" id="synBadge"></span></h2>
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
+        <div class="fieldset">
+          <div class="row"><label>Dépenses</label><div id="s_dep">—</div><button class="btn" data-copy="s_dep">Copier</button></div>
+          <div class="row"><label>Minimum Garanti</label><div id="s_mg">—</div><button class="btn" data-copy="s_mg">Copier</button></div>
+          <div class="row"><label>Break</label><div id="s_brk">—</div><button class="btn" data-copy="s_brk">Copier</button></div>
+          <hr style="border:0;border-top:1px solid var(--border)">
+          <div class="row"><label>Objectif de recette</label><div id="s_obj">—</div><button class="btn" data-copy="s_obj">Copier</button></div>
+          <div class="row"><label>Résultat</label><div id="s_res">—</div><button class="btn" data-copy="s_res">Copier</button></div>
+          <hr style="border:0;border-top:1px solid var(--border)">
+          <div class="row"><label>Prix moyen</label><div id="s_pm">—</div><button class="btn" data-copy="s_pm">Copier</button></div>
+          <div class="row"><label>Σ billets</label><div id="s_sb">—</div><button class="btn" data-copy="s_sb">Copier</button></div>
+          <div class="row"><label>Occupation</label><div id="s_oc">—</div><button class="btn" data-copy="s_oc">Copier</button></div>
+          <div class="row"><label>Capacité</label><div id="s_cap">—</div><button class="btn" data-copy="s_cap">Copier</button></div>
+        </div>
+        <div class="fieldset">
+          <div class="row"><label>Objectif producteur</label><div id="s_pg">—</div><button class="btn" data-copy="s_pg">Copier</button></div>
+          <div class="row"><label>Part organisateur</label><div id="s_po">—</div><button class="btn" data-copy="s_po">Copier</button></div>
+          <hr style="border:0;border-top:1px solid var(--border)">
+          <div class="row"><label>% Producteur</label><div id="s_pp">—</div><button class="btn" data-copy="s_pp">Copier</button></div>
+          <div class="row"><label>% Organisateur</label><div id="s_rp">—</div><button class="btn" data-copy="s_rp">Copier</button></div>
+        </div>
+      </div>
+      <div class="btns" style="justify-content:flex-start">
+        <button class="btn" id="resetAll">Réinitialiser</button>
+        <button class="btn" id="copySynth">Copier toute la synthèse</button>
+        <label class="btn ghost" style="cursor:pointer;display:inline-flex;gap:8px;align-items:center">
+          <input type="checkbox" id="toggleDecimals" checked style="accent-color:#7aa2ff"/> Afficher les décimales (virgules)
+        </label>
+        <span id="decStatus" class="badge">Décimales : ON</span>
+      </div>
+    </section>
+
+    <section class="about">
+      <details>
+        <summary><strong>À propos</strong></summary>
+        <p style="margin:10px 0 6px">PhonoStage — Coréa Calculator • Version web autonome (1 fichier). © 2025 Charlélie Elziere. Tous droits réservés.</p>
+        <p class="muted">Les calculs sont indicatifs et fondés sur vos paramètres. Vérifiez toujours vos montants avec les textes officiels et vos contrats.</p>
+        <div class="btns" style="justify-content:flex-start">
+          <button class="btn" id="btnAbout">Ouvrir la fenêtre « À propos »</button>
+        </div>
+      </details>
+    </section>
+  </div>
+
+  <dialog id="aboutModal" style="max-width:760px;">
+    <div class="modal-head"><h3>À propos — PhonoStage Pro</h3><button class="btn ghost" data-close>Fermer</button></div>
+    <div style="max-height:60vh;overflow:auto">
+      <p><strong>PhonoStage — Coréa Calculator</strong><br>Version 1.0  •  © 2025 Charlélie Elziere. Tous droits réservés.<br>Dernière mise à jour : 31 octobre 2025</p>
+      <hr style="border:0;border-top:1px solid var(--border)">
+      <p><strong>OBJET</strong><br>Outil d’aide au chiffrage pour les modèles de coréalisation : recettes, seuil de break-even, répartition producteur/organisateur.</p>
+      <p><strong>PROPRIÉTÉ INTELLECTUELLE</strong><br>Le code, l’interface et la structure de données sont protégés par le droit d’auteur. Les données restent à l’utilisateur.</p>
+      <p><strong>DONNÉES & EXACTITUDE</strong><br>Référez-vous aux textes réglementaires/contractuels en vigueur et mettez vos paramètres à jour si besoin.</p>
+      <p><strong>LICENCE D’USAGE</strong><br>Logiciel fourni « tel quel », sans garantie. Usage autorisé pour chiffrage/simulation professionnelle raisonnable.</p>
+      <p><strong>LIMITATION DE RESPONSABILITÉ</strong><br>L’auteur ne peut être tenu responsable d’un usage inadapté ou de décisions prises sur la seule base des résultats.</p>
+      <p><strong>CONFIDENTIALITÉ</strong><br>Les données restent locales (LocalStorage du navigateur). Aucune transmission à des tiers.</p>
+      <p><strong>CONTACT</strong><br>Charlélie Elziere — elziere.charlelie@gmail.com</p>
+    </div>
+  </dialog>
+
+  <script>
+    // ======== Etat & utilitaires ========
+    const CFG_KEY = 'corea_cfg_v1';
+    let SHOW_DECIMALS = true;
+
+    const state = {
+      simu: false,
+      dep: '0', mg: '0', cap: '1000', obj: '0', pu: '0',
+      rows: [ {tarif:'Plein', prix:25, nb:300}, {tarif:'Réduit', prix:18, nb:200} ],
+      pctMax: 100, pctVal: 50,
+      copies: {}
+    };
+
+    const $ = (sel)=>document.querySelector(sel);
+    const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
+
+    const parseFloatFR = (s,d=0)=>{ try{ const x=String(s??'').replace(/€/g,'').replace(/%/g,'').replace(/\u00a0/g,' ').trim().replace(/\s/g,'').replace(',','.'); return x?parseFloat(x):d }catch{return d} };
+    const parseIntSafe = (s,d=0)=>{ try{ const x=String(s??'').trim().replace(/\s/g,'').replace(',','.'); return x?parseInt(Number(x)):d }catch{return d} };
+    const fmtFR = (n)=>{ try{ return Number(n).toLocaleString('fr-FR', {minimumFractionDigits:SHOW_DECIMALS?2:0, maximumFractionDigits:SHOW_DECIMALS?2:0}); }catch{return String(n)} };
+    const fmtEUR = (n)=> `${fmtFR(n)} \u20AC`;
+    const fmtPCT = (p)=> SHOW_DECIMALS? `${(p*100).toFixed(1).replace('.',',')} %` : `${Math.round(p*100)} %`;
+    const safeDiv = (a,b)=>{ b=Number(b); return b===0?0:Number(a)/b };
+    const extractNumber = (t)=>{ const m=String(t||'').match(/-?\d+(?:[.,]\d+)?/); return m?m[0].replace(/\s/g,'').replace(',','.'):'' };
+
+    // ======== Chargement / sauvegarde ========
+    function loadCfg(){
+      try{ const raw=localStorage.getItem(CFG_KEY); if(!raw) return; const data=JSON.parse(raw);
+        Object.assign(state, data);
+      }catch{}
+    }
+    function saveCfg(){ try{ localStorage.setItem(CFG_KEY, JSON.stringify(state)); }catch{} }
+
+    // ======== DOM refs ========
+    const els = {
+      simuToggle: $('#simuToggle'), dep: $('#dep'), mg: $('#mg'), cap: $('#cap'), obj: $('#obj'), pu: $('#pu'),
+      breakTxt: $('#breakTxt'), resTxt: $('#resTxt'), nbBreakTxt: $('#nbBreakTxt'), rateBreakTxt: $('#rateBreakTxt'),
+      ctxBadge: $('#ctxBadge'),
+      pctSlider: $('#pctProd'), objProdTarget: $('#objProdTarget'), pctProdTxt: $('#pctProdTxt'), partOrgTxt: $('#partOrgTxt'), pctOrgTxt: $('#pctOrgTxt'), shortfallTxt: $('#shortfallTxt'),
+      tblCard: $('#tblCard'), priceTable: $('#priceTable tbody'), pmoyTxt: $('#pmoyTxt'), snbTxt: $('#snbTxt'), stotTxt: $('#stotTxt'), capWarn: $('#capWarn'), tblBadge: $('#tblBadge'),
+      synBadge: $('#synBadge'),
+      s_dep: $('#s_dep'), s_mg: $('#s_mg'), s_brk: $('#s_brk'), s_obj: $('#s_obj'), s_res: $('#s_res'), s_pm: $('#s_pm'), s_sb: $('#s_sb'), s_oc: $('#s_oc'), s_cap: $('#s_cap'), s_pg: $('#s_pg'), s_po: $('#s_po'), s_pp: $('#s_pp'), s_rp: $('#s_rp'),
+      toggleDecimals: $('#toggleDecimals'), decStatus: $('#decStatus'),
+      aboutModal: $('#aboutModal')
+    };
+
+    // ======== Table billets ========
+    let selectedIndex = -1;
+    function renderRows(){
+      els.priceTable.innerHTML = '';
+      state.rows.forEach((r,idx)=>{
+        const tr = document.createElement('tr');
+        if(idx===selectedIndex) tr.classList.add('selected');
+        tr.innerHTML = `
+          <td><input data-k="tarif" data-i="${idx}" value="${r.tarif}"></td>
+          <td><input data-k="prix" data-i="${idx}" value="${r.prix}"></td>
+          <td><input data-k="nb" data-i="${idx}" value="${r.nb}"></td>
+          <td style="text-align:center">${fmtEUR((Number(r.prix)||0)*(Number(r.nb)||0))}</td>`;
+        tr.addEventListener('click',()=>{ selectedIndex=idx; renderRows(); });
+        els.priceTable.appendChild(tr);
+      });
+      computeAll();
+    }
+
+    document.addEventListener('input',(e)=>{
+      const k=e.target.getAttribute('data-k'); if(!k) return; const idx=Number(e.target.getAttribute('data-i'));
+      if(Number.isNaN(idx)) return; const v=e.target.value;
+      if(k==='tarif') state.rows[idx].tarif=v; else if(k==='prix') state.rows[idx].prix=parseFloatFR(v,0); else if(k==='nb') state.rows[idx].nb=parseIntSafe(v,0);
+      computeAll();
+    });
+
+    $('#rowAdd').addEventListener('click',()=>{ state.rows.push({tarif:`Tarif ${state.rows.length+1}`, prix:0, nb:0}); selectedIndex=state.rows.length-1; renderRows(); saveCfg(); });
+    $('#rowDup').addEventListener('click',()=>{
+      if(selectedIndex<0) return; const row = {...state.rows[selectedIndex]}; row.tarif += ' (copie)'; state.rows.splice(selectedIndex+1,0,row); selectedIndex++; renderRows(); saveCfg();
+    });
+    $('#rowDel').addEventListener('click',()=>{
+      if(selectedIndex<0) return; state.rows.splice(selectedIndex,1); if(state.rows.length===0) state.rows=[{tarif:'Tarif 1', prix:0, nb:0}]; selectedIndex=Math.min(selectedIndex, state.rows.length-1); renderRows(); saveCfg();
+    });
+
+    // ======== Calculs ========
+    function computeAll(){
+      // Inputs
+      const dep = parseFloatFR(els.dep.value||state.dep,0); state.dep = String(dep);
+      const mg  = parseFloatFR(els.mg.value||state.mg,0); state.mg  = String(mg);
+      const cap = Math.max(0, parseIntSafe(els.cap.value||state.cap,0)); state.cap = String(cap);
+
+      // Simulation vs manuel
+      state.simu = els.simuToggle.checked;
+      let sum_nb = 0, sum_ht = 0, pmoy = 0;
+      if(state.simu){
+        state.obj = String(sum_ht);
+        state.pu  = String(pmoy);
+      }
+      state.rows.forEach(r=>{ const nb = Math.max(0, parseIntSafe(r.nb,0)); const prix = Math.max(0, parseFloatFR(r.prix,0)); sum_nb += nb; sum_ht += nb*prix; });
+      pmoy = sum_nb>0? (sum_ht/sum_nb) : 0;
+
+      let objectif, pu_prev;
+      if(state.simu){
+        objectif = sum_ht; pu_prev = pmoy; els.obj.value = fmtFR(objectif); els.pu.value = fmtFR(pu_prev);
+        els.obj.disabled = true; els.pu.disabled = true; $('#tblCard').style.display = '';
+      } else {
+        objectif = parseFloatFR(els.obj.value||state.obj,0); pu_prev = parseFloatFR(els.pu.value||state.pu,0);
+        els.obj.disabled = false; els.pu.disabled = false; $('#tblCard').style.display = 'none';
+      }
+
+      // Break & résultat
+      const breakVal = dep + mg; const result = objectif - breakVal;
+      els.breakTxt.textContent = `Break : ${fmtEUR(breakVal)}`;
+      els.resTxt.textContent   = `Résultat : ${fmtEUR(result)}`;
+      state.copies.breakNum = fmtFR(breakVal); state.copies.resNum = fmtFR(result);
+
+      // Nb billets pour break + taux
+      const nbBreak = (pu_prev>0)? Math.ceil(breakVal / pu_prev) : 0;
+      els.nbBreakTxt.textContent = `Nb billets pour break : ${nbBreak>0? nbBreak : '—'}`;
+      state.copies.nbBreakNum = nbBreak>0? String(nbBreak):'';
+      const rateBreak = (cap>0 && nbBreak>0)? (nbBreak/cap) : 0;
+      els.rateBreakTxt.textContent = `Taux de break : ${(cap>0 && nbBreak>0)? fmtPCT(rateBreak) : '—'}`;
+      state.copies.rateBreakNum = (cap>0 && nbBreak>0)? (SHOW_DECIMALS? (rateBreak*100).toFixed(1).replace('.',',') : String(Math.round(rateBreak*100))) : '';
+
+      // Badge contexte
+      els.ctxBadge.textContent = `Break ${fmtEUR(breakVal)} • Résultat ${fmtEUR(result)}`;
+
+      // Répartition via slider (borne dynamique)
+      let pctVal = Number(els.pctSlider.value); if(pctVal>state.pctMax){ state.pctMax = Math.ceil(pctVal/10)*10; els.pctSlider.max = String(state.pctMax); }
+      pctVal = Math.max(0, Math.min(state.pctMax, pctVal)); state.pctVal = pctVal; $('#pctProd').value = String(pctVal);
+
+      let pct_prod=0, pct_org=0, obj_prod=0, part_org=0; els.shortfallTxt.textContent = '';
+      if(result>0){
+        pct_prod = pctVal/100; pct_org = 1 - pct_prod; obj_prod = pct_prod * result; part_org = result - obj_prod;
+        els.pctProdTxt.textContent = `% Prod : ${fmtPCT(pct_prod)}`;
+        els.partOrgTxt.textContent = `Part Orga : ${fmtEUR(part_org)}`;
+        els.pctOrgTxt.textContent  = `% Orga : ${fmtPCT(pct_org)}`;
+        state.copies.pctProdNum = SHOW_DECIMALS? (pct_prod*100).toFixed(1).replace('.',',') : String(Math.round(pct_prod*100));
+        state.copies.partOrgNum = fmtFR(part_org);
+        state.copies.pctOrgNum  = SHOW_DECIMALS? (pct_org*100).toFixed(1).replace('.',',') : String(Math.round(pct_org*100));
+      } else {
+        els.pctProdTxt.textContent = '% Prod : —'; els.partOrgTxt.textContent = 'Part Orga : —'; els.pctOrgTxt.textContent = '% Orga : —';
+        state.copies.pctProdNum = state.copies.partOrgNum = state.copies.pctOrgNum = '';
+      }
+
+      // Alerte billets manquants si % producteur > 100 % (objectif > résultat)
+      if(result>0 && pct_prod>1){
+        const manque = obj_prod - result; const pu_ref = state.simu? pmoy : pu_prev; if(pu_ref>0){ const billets = Math.ceil(manque/pu_ref); els.shortfallTxt.textContent = `⚠️ ${billets} billets à vendre pour atteindre l’objectif producteur`; } else { els.shortfallTxt.textContent = '⚠️ Prix moyen inconnu : estimation impossible'; }
+      }
+
+      // Récap simulation/occupation
+      const occ = cap>0? (sum_nb/cap) : 0;
+      els.pmoyTxt.textContent = `Prix unitaire (moyenne pondérée) : ${fmtEUR(pmoy)}`; state.copies.pmoyNum = fmtFR(pmoy);
+      els.snbTxt.textContent  = `Σ billets : ${sum_nb}  •  Occupation : ${cap>0? fmtPCT(occ) : '—'}`;
+      els.stotTxt.textContent = `Σ Total HT : ${fmtEUR(sum_ht)}`; state.copies.stotNum = fmtFR(sum_ht);
+      els.capWarn.textContent = (state.simu && sum_nb>cap)? `Dépassement de capacité de ${sum_nb-cap} places (Σ billets ${sum_nb} > capacité ${cap}).` : '';
+      els.tblBadge.textContent = state.simu? `Prix moy ${fmtEUR(pmoy)} • Σ ${sum_nb} • Obj ${fmtEUR(sum_ht)}` : '';
+
+      // Synthèse + badge
+      $('#synBadge').textContent = `Résultat ${fmtEUR(result)}`;
+      els.s_dep.textContent = fmtEUR(dep); els.s_mg.textContent = fmtEUR(mg); els.s_brk.textContent = fmtEUR(breakVal);
+      els.s_obj.textContent = fmtEUR(objectif); els.s_res.textContent = fmtEUR(result);
+      els.s_pm.textContent  = fmtEUR(state.simu? pmoy: pu_prev);
+      els.s_sb.textContent  = state.simu? String(sum_nb) : '—';
+      els.s_oc.textContent  = (state.simu && cap>0)? fmtPCT(occ) : '—';
+      els.s_cap.textContent = String(cap);
+      els.s_pg.textContent = fmtEUR(obj_prod); els.s_po.textContent = fmtEUR(part_org);
+      els.s_pp.textContent = fmtPCT(result>0? pct_prod:0); els.s_rp.textContent = fmtPCT(result>0? pct_org:0);
+
+      // Copies synthèse
+      Object.assign(state.copies,{
+        s_dep: extractNumber(els.s_dep.textContent), s_mg: extractNumber(els.s_mg.textContent), s_brk: extractNumber(els.s_brk.textContent), s_obj: extractNumber(els.s_obj.textContent), s_res: extractNumber(els.s_res.textContent), s_pm: extractNumber(els.s_pm.textContent), s_sb: extractNumber(els.s_sb.textContent), s_oc: extractNumber(els.s_oc.textContent), s_cap: extractNumber(els.s_cap.textContent), s_pg: extractNumber(els.s_pg.textContent), s_po: extractNumber(els.s_po.textContent), s_pp: extractNumber(els.s_pp.textContent), s_rp: extractNumber(els.s_rp.textContent)
+      });
+
+      saveCfg();
+    }
+
+    // ======== Handlers ========
+    els.simuToggle.addEventListener('change',()=>{ state.simu = els.simuToggle.checked; $('#tblCard').style.display = state.simu? '': 'none'; computeAll(); });
+    ['dep','mg','cap','obj','pu'].forEach(id=>{ $('#'+id).addEventListener('input', computeAll); });
+
+    els.pctSlider.addEventListener('input',()=>{ let v=Number(els.pctSlider.value); if(v>state.pctMax){ state.pctMax=Math.ceil(v/10)*10; els.pctSlider.max=String(state.pctMax);} computeAll(); });
+    els.objProdTarget.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ const tgt = parseFloatFR(els.objProdTarget.value, NaN); if(Number.isNaN(tgt)) return; // s'assurer result à jour
+        computeAll(); const res = parseFloatFR(state.copies.resNum,0) || (parseFloatFR(els.s_res.textContent,0)); if(res<=0) return; let pct = (tgt/res)*100; if(pct>state.pctMax){ state.pctMax=Math.ceil(pct/10)*10; els.pctSlider.max=String(state.pctMax);} els.pctSlider.value=String(pct); computeAll(); }
+    });
+
+    $('#resetAll').addEventListener('click',()=>{
+      Object.assign(state,{ simu:true, dep:'0', mg:'0', cap:'1000', obj:'0', pu:'0', rows:[{tarif:'Plein',prix:25,nb:300},{tarif:'Réduit',prix:18,nb:200}], pctMax:100, pctVal:50 });
+      els.simuToggle.checked = true; els.dep.value='0'; els.mg.value='0'; els.cap.value='1000'; els.obj.value='0'; els.pu.value='0'; els.pctSlider.max='100'; els.pctSlider.value='50'; selectedIndex=-1; renderRows(); computeAll();
+    });
+
+    $('#copySynth').addEventListener('click',()=>{
+      const keys=['s_dep','s_mg','s_brk','s_obj','s_res','s_pm','s_sb','s_oc','s_cap','s_pg','s_po','s_pp','s_rp'];
+      const text = keys.map(k=>state.copies[k]||'').join('\n');
+      copyText(text).then(()=>alert('Chiffres copiés dans le presse-papiers.')).catch(()=>alert('Impossible de copier.'));
+    });
+
+    document.body.addEventListener('click',(e)=>{
+      const btn=e.target.closest('button[data-copy]'); if(!btn) return; const key=btn.getAttribute('data-copy'); const val=state.copies[key]||''; if(!val){ alert('Rien à copier.'); return; } copyText(val);
+    });
+
+    function copyText(t){ if(navigator.clipboard?.writeText){ return navigator.clipboard.writeText(t); } return new Promise((res,rej)=>{ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); res(); }catch(e){ rej(e); } finally{ ta.remove(); } }); }
+
+    els.toggleDecimals.addEventListener('change',()=>{ SHOW_DECIMALS = els.toggleDecimals.checked; els.decStatus.textContent = `Décimales : ${SHOW_DECIMALS? 'ON':'OFF'}`; computeAll(); renderRows(); });
+
+    // À propos
+    $('#btnAbout').addEventListener('click',()=>els.aboutModal.showModal());
+    els.aboutModal.querySelector('[data-close]').addEventListener('click',()=>els.aboutModal.close());
+
+    // ======== Init ========
+    function init(){
+      loadCfg();
+      els.simuToggle.checked = !!state.simu;
+      els.dep.value = state.dep; els.mg.value = state.mg; els.cap.value = state.cap; els.obj.value = state.obj; els.pu.value = state.pu;
+      els.pctSlider.value = String(state.pctVal||50); els.pctSlider.max = String(state.pctMax||100);
+      $('#tblCard').style.display = state.simu? '' : 'none';
+      renderRows();
+      computeAll();
+    }
+    init();
+  </script>
+</body>
+</html>

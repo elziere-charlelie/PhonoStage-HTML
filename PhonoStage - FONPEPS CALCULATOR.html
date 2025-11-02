@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PHONOSTAGE – FONPEPS Calculator (APAJ & ADEP)</title>
+  <style>
+    :root{
+      --bg:#0f1115; --panel:#171a21; --muted:#8a93a5; --text:#e9edf5; --accent:#7aa2ff; --accent-2:#67e8f9; --danger:#ff6b6b; --ok:#34d399;
+      --border:#2a2f3a; --chip:#232837;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,"Noto Sans",sans-serif;background:linear-gradient(180deg,#0e1014,#0c0f14 40%,#0b0e13 100%);color:var(--text)}
+    a{color:var(--accent)}
+    .wrap{max-width:1080px;margin:0 auto;padding:24px}
+    .title{background:#12151c;border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+    .title h1{margin:0;font-size:24px;letter-spacing:.4px}
+    .subtitle{margin:6px 0 0;color:var(--muted);font-style:italic;font-size:13px}
+
+    .grid{display:grid;gap:16px}
+    @media (min-width:900px){.grid{grid-template-columns:1fr 1fr}}
+
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px 14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+    .card h2{margin:4px 6px 0;font-size:18px}
+    .card .meta{color:var(--muted);font-size:12px;margin:6px 6px 8px}
+
+    .fieldset{border:1px dashed var(--border);border-radius:12px;padding:10px;margin:10px 6px}
+    .row{display:grid;grid-template-columns:170px 1fr;gap:8px;align-items:center;margin:6px 0}
+    label{color:#cdd5e1;font-size:14px}
+    input,select,button{font:inherit}
+    input,select{width:100%;background:#0f131b;border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text)}
+    input[readonly]{opacity:.75}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin:6px}
+    .btn{background:#111827;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer}
+    .btn:hover{border-color:#3a4152}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#0b1020;border:0}
+    .btn.ghost{background:transparent;border-color:#3a4152}
+    .btn.danger{background:#2a0e12;border-color:#6b1f2a;color:#ffb4b4}
+
+    .results{border-top:1px solid var(--border);margin-top:10px;padding-top:10px}
+    .result-line{display:flex;gap:10px;align-items:center;margin:4px 0}
+    .result-line strong{font-size:16px}
+    .chip{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--chip);border:1px solid var(--border);font-size:12px;color:#c7d2fe}
+
+    details{background:#12161f;border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:10px 6px}
+    details>summary{cursor:pointer;list-style:none}
+    details>summary::-webkit-details-marker{display:none}
+
+    .about{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px;margin-top:16px}
+
+    dialog{border:1px solid var(--border);border-radius:16px;background:#0e1219;color:var(--text);box-shadow:0 40px 120px rgba(0,0,0,.5)}
+    dialog::backdrop{background:rgba(0,0,0,.55)}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .table{overflow:auto;border:1px solid var(--border);border-radius:10px}
+    table{border-collapse:collapse;width:100%;min-width:520px}
+    th,td{border-bottom:1px solid var(--border);padding:10px 12px;text-align:left}
+    th{position:sticky;top:0;background:#12161f}
+    td input{width:120px}
+    .muted{color:var(--muted)}
+    .footer{margin-top:8px;display:flex;gap:10px;justify-content:flex-end}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="title">
+      <h1>PHONOSTAGE – FONPEPS CALCULATOR</h1>
+      <p class="subtitle">source : ASP.gouv • UI web — défilement fluide — résultats copiables</p>
+    </header>
+
+    <main class="grid" id="mainGrid">
+      <!-- APAJ -->
+      <section class="card" id="apajCard">
+        <h2>APAJ — Spectacle vivant</h2>
+        <div class="meta">Mise à jour : 30/10/2025</div>
+        <div class="fieldset">
+          <div class="row">
+            <label for="apajJauge">Jauge</label>
+            <select id="apajJauge">
+              <option value="<300">< 300</option>
+              <option value="300-500">300–500</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="apajArtistes">Nombre d’artistes</label>
+            <input type="number" id="apajArtistes" value="3" min="1" max="20" />
+          </div>
+          <div class="row">
+            <label for="apajJours">Nombre de jours</label>
+            <input type="number" id="apajJours" value="1" min="1" max="60" />
+          </div>
+          <div class="row">
+            <label for="apajTech">Technicien présent</label>
+            <select id="apajTech">
+              <option>Non</option>
+              <option>Oui</option>
+            </select>
+          </div>
+          <div class="btns">
+            <button class="btn" id="btnEditApaj">Modifier matrices…</button>
+            <button class="btn ghost" id="btnResetApaj">Réinitialiser</button>
+          </div>
+        </div>
+
+        <div class="results" id="apajResults">
+          <div class="result-line"><strong id="apajArtTxt">Aide Artistes : —</strong> <button class="btn" data-copy="apajArtNum">Copier</button></div>
+          <div class="result-line"><strong id="apajTechTxt">Aide Technicien : —</strong> <button class="btn" data-copy="apajTechNum">Copier</button></div>
+          <hr style="border:0;border-top:1px solid var(--border)">
+          <div class="result-line"><strong id="apajTotTxt">Total : —</strong> <button class="btn primary" data-copy="apajTotNum">Copier</button></div>
+          <div class="muted" id="apajHint"></div>
+        </div>
+      </section>
+
+      <!-- ADEP -->
+      <section class="card" id="adepCard">
+        <h2>ADEP — Production phonographique</h2>
+        <div class="meta">Mise à jour : 30/10/2025</div>
+        <div class="fieldset">
+          <div class="row">
+            <label for="adepArtistes">Nombre d’artistes</label>
+            <input type="number" id="adepArtistes" value="1" min="1" max="60" />
+          </div>
+          <div class="row">
+            <label for="adepJours">Nombre de jours</label>
+            <input type="number" id="adepJours" value="1" min="1" max="120" />
+          </div>
+          <div class="row">
+            <label for="adepCachet">Cachet brut (€/cachet)</label>
+            <input type="text" id="adepCachet" />
+          </div>
+          <div class="btns">
+            <button class="btn" id="btnEditAdep">Modifier taux & cachet…</button>
+            <button class="btn ghost" id="btnResetAdep">Réinitialiser</button>
+          </div>
+        </div>
+        <div class="results" id="adepResults">
+          <div class="result-line"><strong id="adepRateTxt">Taux : —</strong> <button class="btn" data-copy="adepRateNum">Copier</button></div>
+          <div class="result-line"><strong id="adepAidTxt">Aide : —</strong> <button class="btn primary" data-copy="adepAidNum">Copier</button></div>
+          <div class="result-line"><strong id="adepPerTxt">Aide par artiste : —</strong> <button class="btn" data-copy="adepPerNum">Copier</button></div>
+        </div>
+      </section>
+    </main>
+
+    <section class="about">
+      <details>
+        <summary><strong>À propos</strong></summary>
+        <p style="margin:10px 0 6px">PhonoStage — FONPEPS Calculator • Version web autonome (1 fichier). © 2025 Charlélie Elziere. Tous droits réservés.</p>
+        <p class="muted">Les calculs sont indicatifs et fondés sur les barèmes internes que vous pouvez ajuster. Vérifiez toujours les montants auprès des sources officielles.</p>
+        <div class="btns" style="justify-content:flex-start">
+          <button class="btn" id="btnAbout">Ouvrir la fenêtre « À propos »</button>
+        </div>
+      </details>
+    </section>
+  </div>
+
+  <!-- Modals -->
+  <dialog id="apajModal" style="max-width:760px;">
+    <div class="modal-head"><h3>Matrices APAJ — €/artiste/jour</h3><button class="btn ghost" data-close>Fermer</button></div>
+    <div class="muted" style="margin-bottom:8px">Laissez une cellule vide pour « non éligible ».</div>
+    <div class="table"><table id="apajTable"></table></div>
+    <div class="footer">
+      <button class="btn ghost" id="apajResetDefaults">Réinitialiser valeurs par défaut</button>
+      <button class="btn primary" id="apajSave">Enregistrer</button>
+    </div>
+  </dialog>
+
+  <dialog id="adepModal" style="max-width:560px;">
+    <div class="modal-head"><h3>Taux ADEP & cachet par défaut</h3><button class="btn ghost" data-close>Fermer</button></div>
+    <div class="fieldset" style="margin:0 0 12px 0">
+      <div class="row"><label for="adepCachetDef">Cachet par défaut (€)</label><input id="adepCachetDef" type="text"></div>
+    </div>
+    <div class="table">
+      <table>
+        <thead><tr><th>Nombre d’artistes</th><th>Taux (%)</th></tr></thead>
+        <tbody id="adepRateBody"></tbody>
+      </table>
+    </div>
+    <div class="footer">
+      <button class="btn ghost" id="adepResetDefaults">Réinitialiser valeurs par défaut</button>
+      <button class="btn primary" id="adepSave">Enregistrer</button>
+    </div>
+  </dialog>
+
+  <dialog id="aboutModal" style="max-width:760px;">
+    <div class="modal-head"><h3>À propos — PhonoStage Pro</h3><button class="btn ghost" data-close>Fermer</button></div>
+    <div style="max-height:60vh;overflow:auto">
+      <p><strong>PhonoStage — FONPEPS Calculator</strong><br>Version 1.0  •  © 2025 Charlélie Elziere. Tous droits réservés.<br>Dernière mise à jour : 31 octobre 2025</p>
+      <hr style="border:0;border-top:1px solid var(--border)">
+      <p><strong>OBJET</strong><br>Outil d’aide au chiffrage et à la simulation des aides à l’emploi (ADEP & APAJ). Les montants sont calculés à partir de barèmes modifiables.</p>
+      <p><strong>PROPRIÉTÉ INTELLECTUELLE</strong><br>Le code, l’interface et la structure de données sont protégés par le droit d’auteur. Les matrices restent votre propriété.</p>
+      <p><strong>DONNÉES & EXACTITUDE</strong><br>Référez-vous aux textes réglementaires et barèmes officiels en vigueur. Mettez à jour vos matrices si nécessaire.</p>
+      <p><strong>LICENCE D’USAGE</strong><br>Logiciel fourni « tel quel », sans garantie. Usage autorisé pour chiffrage/simulation professionnelle raisonnable.</p>
+      <p><strong>LIMITATION DE RESPONSABILITÉ</strong><br>L’auteur ne peut être tenu responsable d’un usage inadapté, d’erreurs de saisie ou de données obsolètes.</p>
+      <p><strong>CONFIDENTIALITÉ</strong><br>Les données restent locales (LocalStorage du navigateur). Aucune transmission à des tiers.</p>
+      <p><strong>RÉFÉRENCES</strong><br>
+        <a href="https://www.asp.gouv.fr/aides/fonpeps-dispositif-de-soutien-lemploi-du-plateau-artistique-de-spectacles-vivants-diffuses-dans-des" target="_blank" rel="noopener">APAJ — ASP</a>
+        •
+        <a href="https://www.asp.gouv.fr/aides/fonpeps-dispositif-de-soutien-lemploi-dans-le-secteur-de-ledition-phonographique-adep" target="_blank" rel="noopener">ADEP — ASP</a>
+      </p>
+      <p><strong>CONTACT</strong><br>Charlélie Elziere — elziere.charlelie@gmail.com</p>
+    </div>
+  </dialog>
+
+  <script>
+    // ---------- Utilitaires ----------
+    const CFG_KEY = "fonpeps_cfg_v1";
+
+    const DEFAULT_APAJ = {
+      "3|<300":56.97, "4|<300":69.63, "5|<300":82.29, "6|<300":94.95,
+      "7|<300":94.95, "8|<300":null,   "9|<300":null,
+      "3|300-500":null, "4|300-500":null, "5|300-500":43.31,
+      "6|300-500":59.97, "7|300-500":69.63, "8|300-500":82.29,
+      "9|300-500":94.95, "10|300-500":null,
+    };
+    const DEFAULT_ADEP_CACHE_MIN = 185.82;
+    const DEFAULT_ADEP_RATES = {1:25.0,2:25.0,3:35.0,4:45.0,5:55.0,6:60.0,7:60.0,8:60.0,9:60.0,10:60.0};
+
+    const deepCopy = (o)=>JSON.parse(JSON.stringify(o));
+
+    const parseIntSafe = (s, d=0)=>{ try{ return parseInt(String(s).replace(",",".").trim(),10); }catch{ return d } };
+    const parseFloatFR = (s, d=0)=>{
+      try{ const x = String(s).replaceAll("\u00a0"," ").replace(/\s|€/g,"").replace(",","."); return x?parseFloat(x):d }catch{ return d }
+    };
+    const fmtFR = (n)=>{
+      try{ return (n).toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}); }catch{ return String(n) }
+    };
+    const fmtEUR = (n)=> `${fmtFR(n)} \u20AC`;
+
+    const loadCfg = ()=>{
+      let base = { apaj: deepCopy(DEFAULT_APAJ), adep_rates: deepCopy(DEFAULT_ADEP_RATES), adep_cache: DEFAULT_ADEP_CACHE_MIN };
+      try{
+        const raw = localStorage.getItem(CFG_KEY);
+        if(raw){
+          const data = JSON.parse(raw);
+          if(data && typeof data === 'object'){
+            if(data.apaj && typeof data.apaj==='object'){
+              for(const [k,v] of Object.entries(data.apaj)) base.apaj[k]=v;
+            }
+            if(data.adep_rates && typeof data.adep_rates==='object') base.adep_rates = Object.fromEntries(Object.entries(data.adep_rates).map(([k,v])=>[parseInt(k,10), parseFloat(v)]));
+            if(typeof data.adep_cache === 'number') base.adep_cache = data.adep_cache;
+          }
+        }
+      }catch{}
+      return base;
+    };
+    const saveCfg = (cfg)=>{ try{ localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }catch{} };
+
+    const state = { cfg: loadCfg(), copies: { apajArtNum:"", apajTechNum:"", apajTotNum:"", adepRateNum:"", adepAidNum:"", adepPerNum:"" } };
+
+    // ---------- APAJ ----------
+    const apajEls = {
+      jauge: document.getElementById('apajJauge'),
+      artistes: document.getElementById('apajArtistes'),
+      jours: document.getElementById('apajJours'),
+      tech: document.getElementById('apajTech'),
+      artTxt: document.getElementById('apajArtTxt'),
+      techTxt: document.getElementById('apajTechTxt'),
+      totTxt: document.getElementById('apajTotTxt'),
+      hint: document.getElementById('apajHint'),
+    };
+
+    function apajUnit(n, jauge){ return state.cfg.apaj[`${n}|${jauge}`] ?? null }
+
+    function computeAPAJ(){
+      const nRaw = parseIntSafe(apajEls.artistes.value, 0);
+      const n = Math.max(1, Math.min(10, nRaw)); // barème jusqu'à 10
+      const j = parseIntSafe(apajEls.jours.value, 0);
+      const jauge = apajEls.jauge.value;
+      const tech = apajEls.tech.value.toLowerCase()==='oui';
+      if(n<=0||j<=0||!['<300','300-500'].includes(jauge)){
+        apajEls.artTxt.textContent='Aide Artistes : —';
+        apajEls.techTxt.textContent='Aide Technicien : —';
+        apajEls.totTxt.textContent='Total : —';
+        state.copies.apajArtNum=state.copies.apajTechNum=state.copies.apajTotNum="";
+        apajEls.hint.textContent='';
+        return;
+      }
+      const unit = apajUnit(n, jauge);
+      if(unit==null || unit<=0){
+        apajEls.artTxt.textContent='Aide Artistes : —';
+        apajEls.techTxt.textContent='Aide Technicien : —';
+        apajEls.totTxt.textContent='Total : —';
+        state.copies.apajArtNum=state.copies.apajTechNum=state.copies.apajTotNum="";
+        apajEls.hint.textContent = `Barème indisponible pour ${n} artistes / ${jauge}.`;
+        return;
+      }
+      const aideArt = unit*n*j;
+      const aideTech = tech ? unit*j : 0;
+      const total = aideArt + aideTech;
+      apajEls.artTxt.textContent = `Aide Artistes : ${fmtEUR(aideArt)}  (= ${fmtEUR(unit)} /art./jour)`;
+      apajEls.techTxt.textContent = aideTech>0 ? `Aide Technicien : ${fmtEUR(aideTech)}` : 'Aide Technicien : —';
+      apajEls.totTxt.textContent = `Total : ${fmtEUR(total)}`;
+      state.copies.apajArtNum = fmtFR(aideArt);
+      state.copies.apajTechNum = aideTech>0 ? fmtFR(aideTech) : "";
+      state.copies.apajTotNum = fmtFR(total);
+      apajEls.hint.textContent = '';
+    }
+
+    document.getElementById('btnResetApaj').addEventListener('click', ()=>{
+      apajEls.jauge.value = '<300';
+      apajEls.artistes.value = '3';
+      apajEls.jours.value = '1';
+      apajEls.tech.value = 'Non';
+      computeAPAJ();
+    });
+
+    ['change','keyup'].forEach(evt=>{
+      apajEls.jauge.addEventListener(evt, computeAPAJ);
+      apajEls.artistes.addEventListener(evt, computeAPAJ);
+      apajEls.jours.addEventListener(evt, computeAPAJ);
+      apajEls.tech.addEventListener(evt, computeAPAJ);
+    });
+
+    // Editor APAJ
+    const apajModal = document.getElementById('apajModal');
+    document.getElementById('btnEditApaj').addEventListener('click', ()=>{
+      buildApajTable(); apajModal.showModal();
+    });
+    apajModal.querySelector('[data-close]').addEventListener('click', ()=>apajModal.close());
+
+    function buildApajTable(){
+      const gauges=['<300','300-500'];
+      const artists=Array.from({length:8},(_,i)=>i+3); // 3..10
+      const table = document.getElementById('apajTable');
+      table.innerHTML = '';
+      const thead = document.createElement('thead');
+      thead.innerHTML = `<tr><th></th>${gauges.map(g=>`<th>${g}</th>`).join('')}</tr>`;
+      const tbody = document.createElement('tbody');
+      for(const n of artists){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><strong>${n} artistes</strong></td>` + gauges.map(g=>{
+          const key=`${n}|${g}`; const val = state.cfg.apaj[key];
+          const display = (val==null||val===undefined)?'':String(val).replace('.',',');
+          return `<td><input type="text" data-key="${key}" value="${display}"></td>`;
+        }).join('');
+        tbody.appendChild(tr);
+      }
+      table.appendChild(thead); table.appendChild(tbody);
+    }
+
+    document.getElementById('apajResetDefaults').addEventListener('click', ()=>{
+      state.cfg.apaj = deepCopy(DEFAULT_APAJ); saveCfg(state.cfg); buildApajTable(); computeAPAJ(); alert('Matrices APAJ réinitialisées.');
+    });
+    document.getElementById('apajSave').addEventListener('click', ()=>{
+      document.querySelectorAll('#apajTable input').forEach(inp=>{
+        const key = inp.dataset.key; const raw = inp.value.trim();
+        if(raw===''){ state.cfg.apaj[key]=null; }
+        else{
+          const v = parseFloatFR(raw, NaN);
+          if(Number.isNaN(v)) return alert(`Valeur invalide pour ${key} : "${raw}"`);
+          state.cfg.apaj[key]=v;
+        }
+      });
+      saveCfg(state.cfg); computeAPAJ(); alert('Matrices APAJ enregistrées.');
+    });
+
+    // ---------- ADEP ----------
+    const adepEls = {
+      artistes: document.getElementById('adepArtistes'),
+      jours: document.getElementById('adepJours'),
+      cachet: document.getElementById('adepCachet'),
+      rateTxt: document.getElementById('adepRateTxt'),
+      aidTxt: document.getElementById('adepAidTxt'),
+      perTxt: document.getElementById('adepPerTxt'),
+    };
+
+    function adepRateFor(n){
+      const rates = state.cfg.adep_rates||{}; const keys = Object.keys(rates).map(k=>parseInt(k,10)).filter(x=>!Number.isNaN(x));
+      if(keys.length===0) return 0;
+      const mx = Math.max(...keys); return (n>mx? rates[mx]: (rates[n]??0));
+    }
+
+    function computeADEP(){
+      const n = parseIntSafe(adepEls.artistes.value, 0);
+      const j = parseIntSafe(adepEls.jours.value, 0);
+      const cachet = parseFloatFR(adepEls.cachet.value, 0);
+      if(n<=0 || j<=0 || cachet<=0){
+        adepEls.rateTxt.textContent='Taux : —';
+        adepEls.aidTxt.textContent='Aide : —';
+        adepEls.perTxt.textContent='Aide par artiste : —';
+        state.copies.adepRateNum=state.copies.adepAidNum=state.copies.adepPerNum=""; return;
+      }
+      const rate = adepRateFor(n)/100;
+      const aide = n*rate*cachet*j;
+      adepEls.rateTxt.textContent = `Taux : ${Math.round(rate*100)}%`;
+      adepEls.aidTxt.textContent = `Aide : ${fmtEUR(aide)}`;
+      adepEls.perTxt.textContent = `Aide par artiste : ${fmtEUR(aide/Math.max(n,1))}`;
+      state.copies.adepRateNum = String(Math.round(rate*100));
+      state.copies.adepAidNum = fmtFR(aide);
+      state.copies.adepPerNum = fmtFR(aide/Math.max(n,1));
+    }
+
+    document.getElementById('btnResetAdep').addEventListener('click', ()=>{
+      adepEls.artistes.value='1'; adepEls.jours.value='1'; adepEls.cachet.value = fmtFR(state.cfg.adep_cache||DEFAULT_ADEP_CACHE_MIN); computeADEP();
+    });
+
+    ['change','keyup'].forEach(evt=>{
+      adepEls.artistes.addEventListener(evt, computeADEP);
+      adepEls.jours.addEventListener(evt, computeADEP);
+      adepEls.cachet.addEventListener(evt, computeADEP);
+    });
+
+    // Editor ADEP
+    const adepModal = document.getElementById('adepModal');
+    document.getElementById('btnEditAdep').addEventListener('click', ()=>{
+      buildAdepEditor(); adepModal.showModal();
+    });
+    adepModal.querySelector('[data-close]').addEventListener('click', ()=>adepModal.close());
+
+    function buildAdepEditor(){
+      document.getElementById('adepCachetDef').value = String(state.cfg.adep_cache).replace('.',',');
+      const body = document.getElementById('adepRateBody'); body.innerHTML='';
+      for(let n=1;n<=10;n++){
+        const tr = document.createElement('tr');
+        const val = state.cfg.adep_rates?.[n] ?? 0;
+        tr.innerHTML = `<td>${n}</td><td><input type="text" data-n="${n}" value="${String(val).replace('.',',')}"></td>`;
+        body.appendChild(tr);
+      }
+    }
+
+    document.getElementById('adepResetDefaults').addEventListener('click', ()=>{
+      state.cfg.adep_cache = DEFAULT_ADEP_CACHE_MIN;
+      state.cfg.adep_rates = deepCopy(DEFAULT_ADEP_RATES);
+      saveCfg(state.cfg); buildAdepEditor(); computeADEP(); alert('Taux & cachet par défaut réinitialisés.');
+    });
+
+    document.getElementById('adepSave').addEventListener('click', ()=>{
+      const cacheRaw = document.getElementById('adepCachetDef').value.trim();
+      const cache = parseFloatFR(cacheRaw, NaN);
+      if(Number.isNaN(cache)) return alert('Cachet par défaut invalide.');
+      const entries = Array.from(document.querySelectorAll('#adepRateBody input')).map(inp=>[parseInt(inp.dataset.n,10), parseFloatFR(inp.value, 0)]);
+      const rates = Object.fromEntries(entries);
+      state.cfg.adep_cache = cache; state.cfg.adep_rates = rates; saveCfg(state.cfg);
+      // mettre à jour l'input si vide/ancien
+      adepEls.cachet.value = fmtFR(state.cfg.adep_cache);
+      computeADEP(); alert('Taux & cachet enregistrés.');
+    });
+
+    // ---------- Copier dans presse-papiers ----------
+    document.body.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button[data-copy]'); if(!btn) return;
+      const key = btn.getAttribute('data-copy'); const val = state.copies[key]||'';
+      if(!val){ alert('Rien à copier pour le moment.'); return; }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(val).then(()=>{/* ok */}).catch(()=>fallbackCopy(val));
+      } else fallbackCopy(val);
+    });
+
+    function fallbackCopy(text){
+      const ta = document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); }catch{}
+      ta.remove();
+    }
+
+    // ---------- À propos ----------
+    const aboutModal = document.getElementById('aboutModal');
+    document.getElementById('btnAbout').addEventListener('click', ()=>aboutModal.showModal());
+    aboutModal.querySelector('[data-close]').addEventListener('click', ()=>aboutModal.close());
+
+    // ---------- Démarrage ----------
+    function init(){
+      // Pré-remplir ADEP cachet
+      adepEls.cachet.value = fmtFR(state.cfg.adep_cache || DEFAULT_ADEP_CACHE_MIN);
+      computeAPAJ(); computeADEP();
+    }
+    init();
+  </script>
+</body>
+</html>
